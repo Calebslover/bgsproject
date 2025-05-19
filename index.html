@@ -2,10 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <title>AR Gift for Caca</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Time Capsule AR Gift</title>
+
+  <!-- MindAR & Three.js -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.min.js"></script>
+
   <style>
     body, html {
       margin: 0;
@@ -17,49 +20,37 @@
       height: 100vh;
       position: relative;
     }
-    .overlay-text {
-      position: absolute;
-      bottom: 10%;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: rgba(0, 0, 0, 0.5);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 10px;
-      font-family: sans-serif;
+    video {
+      display: none;
     }
   </style>
 </head>
 <body>
-  <div id="ar-container">
-    <div class="overlay-text">Scan foto polaroid untuk melihat pesan 🎥</div>
-  </div>
+  <div id="ar-container"></div>
 
-  <script type="module">
-    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.module.js';
-    import { MindARThree } from 'https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-three.prod.js';
+  <!-- Preload video -->
+  <video id="video" src="IMG_5201.MOV" loop crossorigin="anonymous"></video>
 
-    const start = async () => {
-      const mindarThree = new MindARThree({
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const mindarThree = new window.MINDAR.IMAGE.MindARThree({
         container: document.querySelector("#ar-container"),
-        imageTargetSrc: "./targets.mind",
+        imageTargetSrc: "targets.mind",
       });
+
       const { renderer, scene, camera } = mindarThree;
 
       const anchor = mindarThree.addAnchor(0);
 
-      const video = document.createElement("video");
-      video.src = "./IMG_5201.MOV";
-      video.crossOrigin = "anonymous";
-      video.loop = true;
-      video.muted = false;
-      video.playsInline = true;
+      const video = document.querySelector("#video");
+      const videoTexture = new THREE.VideoTexture(video);
+      videoTexture.minFilter = THREE.LinearFilter;
+      videoTexture.magFilter = THREE.LinearFilter;
 
-      const texture = new THREE.VideoTexture(video);
-      const geometry = new THREE.PlaneGeometry(1, 0.5625);
-      const material = new THREE.MeshBasicMaterial({ map: texture });
+      const geometry = new THREE.PlaneGeometry(1, 0.5625); // 16:9 ratio
+      const material = new THREE.MeshBasicMaterial({ map: videoTexture });
       const plane = new THREE.Mesh(geometry, material);
-
+      plane.rotation.x = -Math.PI / 2; // flip if needed
       anchor.group.add(plane);
 
       anchor.onTargetFound = () => {
@@ -73,8 +64,7 @@
       renderer.setAnimationLoop(() => {
         renderer.render(scene, camera);
       });
-    };
-    start();
+    });
   </script>
 </body>
 </html>
